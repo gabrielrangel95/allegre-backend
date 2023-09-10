@@ -1,6 +1,14 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Delete,
+  Put,
+} from '@nestjs/common';
 import { OrganizationService } from './organization.service';
-import { OrganizationCreateDto } from './dto/organization-create.dto';
+import { OrganizationCreateDto, OrganizationUpdateDto } from './dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrganizationEntity } from './organization.entity';
 
@@ -33,5 +41,33 @@ export class OrganizationController {
     data: OrganizationCreateDto,
   ): Promise<OrganizationEntity> {
     return this.organizationService.create(data);
+  }
+
+  @Delete('/:id')
+  @ApiOperation({ summary: 'Delete organization' })
+  @ApiResponse({
+    status: 200,
+    description: 'Organization deleted',
+    type: OrganizationEntity,
+  })
+  async delete(
+    @Param('id') organizationId: string,
+  ): Promise<OrganizationEntity> {
+    return this.organizationService.delete(organizationId);
+  }
+
+  @Put('/:id')
+  @ApiOperation({ summary: 'Update organization' })
+  @ApiResponse({
+    status: 200,
+    description: 'Organization updated',
+    type: OrganizationEntity,
+  })
+  async update(
+    @Param('id') organizationId: string,
+    @Body()
+    data: OrganizationUpdateDto,
+  ): Promise<OrganizationEntity> {
+    return this.organizationService.update(organizationId, data);
   }
 }
