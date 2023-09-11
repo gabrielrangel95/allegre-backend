@@ -13,13 +13,17 @@ import { OrganizationCreateDto, OrganizationUpdateDto } from './dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrganizationEntity } from './organization.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @ApiTags('organization')
 @Controller('organization')
+@UseGuards(AuthGuard, RolesGuard)
+@Roles(UserRole.SUPER_ADMIN)
 export class OrganizationController {
   constructor(private readonly organizationService: OrganizationService) {}
 
-  @UseGuards(AuthGuard)
   @Get('/')
   @ApiOperation({ summary: 'List all organizations' })
   @ApiResponse({
@@ -32,7 +36,6 @@ export class OrganizationController {
     return this.organizationService.list();
   }
 
-  @UseGuards(AuthGuard)
   @Post('/')
   @ApiOperation({ summary: 'Create new organization' })
   @ApiResponse({
@@ -47,7 +50,6 @@ export class OrganizationController {
     return this.organizationService.create(data);
   }
 
-  @UseGuards(AuthGuard)
   @Delete('/:id')
   @ApiOperation({ summary: 'Delete organization' })
   @ApiResponse({
@@ -61,7 +63,6 @@ export class OrganizationController {
     return this.organizationService.delete(organizationId);
   }
 
-  @UseGuards(AuthGuard)
   @Put('/:id')
   @ApiOperation({ summary: 'Update organization' })
   @ApiResponse({
