@@ -14,10 +14,13 @@ import { StudentCreateDto, StudentUpdateDto } from './dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { StudentEntity } from './student.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from '@prisma/client';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @ApiTags('student')
 @Controller('student')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
@@ -33,6 +36,7 @@ export class StudentController {
     return this.studentService.list(req.user.organizationId);
   }
 
+  @Roles(UserRole.ORG_ADMIN, UserRole.ORG_MEMBER)
   @Post('/')
   @ApiOperation({ summary: 'Create new student' })
   @ApiResponse({
@@ -48,6 +52,7 @@ export class StudentController {
     return this.studentService.create(req.user.organizationId, data);
   }
 
+  @Roles(UserRole.ORG_ADMIN, UserRole.ORG_MEMBER)
   @Delete('/:id')
   @ApiOperation({ summary: 'Delete student' })
   @ApiResponse({
@@ -55,10 +60,14 @@ export class StudentController {
     description: 'Student deleted',
     type: StudentEntity,
   })
-  async delete(@Param('id') studentId: string): Promise<StudentEntity> {
-    return this.studentService.delete(studentId);
+  async delete(
+    @Request() req,
+    @Param('id') studentId: string,
+  ): Promise<StudentEntity> {
+    return this.studentService.delete(req.user.organizationId, studentId);
   }
 
+  @Roles(UserRole.ORG_ADMIN, UserRole.ORG_MEMBER)
   @Put('/:id')
   @ApiOperation({ summary: 'Update student' })
   @ApiResponse({
@@ -67,10 +76,11 @@ export class StudentController {
     type: StudentEntity,
   })
   async update(
-    @Param('id') organizationId: string,
+    @Request() req,
+    @Param('id') studentId: string,
     @Body()
     data: StudentUpdateDto,
   ): Promise<StudentEntity> {
-    return this.studentService.update(organizationId, data);
+    return this.studentService.update(req.user.organizationId, studentId, data);
   }
 }

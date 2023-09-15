@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { StudentEntity } from './student.entity';
 import { StudentCreateDto, StudentUpdateDto } from './dto';
@@ -19,7 +19,6 @@ export class StudentService {
     organizationId: string,
     data: StudentCreateDto,
   ): Promise<StudentEntity> {
-    console.log(organizationId);
     return this.prisma.student.create({
       data: {
         ...data,
@@ -32,7 +31,21 @@ export class StudentService {
     });
   }
 
-  async update(id: string, data: StudentUpdateDto): Promise<StudentEntity> {
+  async update(
+    organizationId: string,
+    id: string,
+    data: StudentUpdateDto,
+  ): Promise<StudentEntity> {
+    const student = await this.prisma.student.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (student.organizationId !== organizationId) {
+      throw new UnauthorizedException();
+    }
+
     return this.prisma.student.update({
       where: {
         id,
@@ -41,7 +54,17 @@ export class StudentService {
     });
   }
 
-  async delete(id: string): Promise<StudentEntity> {
+  async delete(organizationId: string, id: string): Promise<StudentEntity> {
+    const student = await this.prisma.student.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (student.organizationId !== organizationId) {
+      throw new UnauthorizedException();
+    }
+
     return this.prisma.student.delete({
       where: {
         id,
