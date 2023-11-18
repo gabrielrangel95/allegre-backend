@@ -3,6 +3,8 @@ import { Class as ClassModel } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsString, IsOptional, IsUUID, IsUrl } from 'class-validator';
 import { OrganizationEntity } from 'src/organization/organization.entity';
+import { StudentClassesEntity } from 'src/student-classes/student-classes.entity';
+import { UserClassesEntity } from 'src/user-classes/user-classes.entity';
 
 export class ClassEntity implements ClassModel {
   @ApiPropertyOptional({
@@ -38,4 +40,20 @@ export class ClassEntity implements ClassModel {
   @IsOptional()
   @Type(() => OrganizationEntity)
   organization?: OrganizationEntity;
+
+  @ApiPropertyOptional({
+    description: 'Student Classes Object',
+    type: () => [StudentClassesEntity],
+  })
+  @IsOptional()
+  @Type(() => StudentClassesEntity)
+  studentClasses?: StudentClassesEntity[];
+
+  @ApiPropertyOptional({
+    description: 'User Classes Object',
+    type: () => [UserClassesEntity],
+  })
+  @IsOptional()
+  @Type(() => UserClassesEntity)
+  userClasses?: UserClassesEntity[];
 }

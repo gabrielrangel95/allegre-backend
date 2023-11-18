@@ -83,7 +83,7 @@ model Class {
   organizationId String
   name           String
   logoUrl        String?
-  studentClass   StudentClasses[]
+  studentClasses StudentClasses[]
   userClasses    UserClasses[]
 
   @@map("class")
