@@ -8,15 +8,17 @@ import {
   Put,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ClassService } from './class.service';
-import { ClassCreateDto, ClassUpdateDto } from './dto';
+import { ClassCreateDto, ClassUpdateDto, ClassFindDto } from './dto';
 import { ClassEntity } from './class.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { FindAllResponse } from 'src/shared/types/find-all.types';
 
 @ApiTags('class')
 @Controller('class')
@@ -32,8 +34,14 @@ export class ClassController {
     type: [ClassEntity],
     isArray: true,
   })
-  async listAll(@Request() req): Promise<ClassEntity[]> {
-    return this.classService.list(req.user.organizationId);
+  async listAll(
+    @Query() params: ClassFindDto,
+    @Request() req,
+  ): Promise<FindAllResponse<ClassEntity>> {
+    return this.classService.list({
+      ...params,
+      organizationId: req.user.organizationId,
+    });
   }
 
   @Roles(UserRole.ORG_ADMIN, UserRole.ORG_MEMBER)

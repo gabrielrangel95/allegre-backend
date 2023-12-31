@@ -1,18 +1,57 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { StudentEntity } from './student.entity';
-import { StudentCreateDto, StudentUpdateDto } from './dto';
+import { StudentCreateDto, StudentUpdateDto, StudentFindDto } from './dto';
+import { FindAllResponse } from 'src/shared/types/find-all.types';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class StudentService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(organizationId: string): Promise<StudentEntity[]> {
-    return this.prisma.student.findMany({
-      where: {
-        organizationId,
-      },
-    });
+  async list(params: StudentFindDto): Promise<FindAllResponse<StudentEntity>> {
+    const where = {
+      id: params.id || undefined,
+      name: params.name
+        ? {
+            contains: params.name,
+            mode: Prisma.QueryMode.insensitive,
+          }
+        : undefined,
+      organizationId: params.organizationId || undefined,
+      rg: params.rg
+        ? {
+            contains: params.rg,
+            mode: Prisma.QueryMode.insensitive,
+          }
+        : undefined,
+      cpf: params.cpf
+        ? {
+            contains: params.cpf,
+            mode: Prisma.QueryMode.insensitive,
+          }
+        : undefined,
+      nis: params.nis
+        ? {
+            contains: params.nis,
+            mode: Prisma.QueryMode.insensitive,
+          }
+        : undefined,
+      dateOfBirth: params.dateOfBirth || undefined,
+    };
+
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.student.count({
+        where,
+      }),
+      this.prisma.student.findMany({
+        where: where,
+        take: Number(params.take) || 20,
+        skip: Number(params.skip) || 0,
+      }),
+    ]);
+
+    return { total, data };
   }
 
   async create(

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
+import { Prisma } from '@prisma/client';
 import { UserCreateDto, UserFindDto } from './dto';
 import { UserEntity } from './user.entity';
 import * as bcrypt from 'bcrypt';
@@ -22,44 +23,30 @@ export class UserService {
   }
 
   async list(params: UserFindDto): Promise<FindAllResponse<UserEntity>> {
+    const where = {
+      id: params.id || undefined,
+      organizationId: params.organizationId || undefined,
+      role: params.role || undefined,
+      name: params.name
+        ? {
+            contains: params.name,
+            mode: Prisma.QueryMode.insensitive,
+          }
+        : undefined,
+      email: params.email
+        ? {
+            contains: params.email,
+            mode: Prisma.QueryMode.insensitive,
+          }
+        : undefined,
+    };
+
     const [total, data] = await this.prisma.$transaction([
       this.prisma.user.count({
-        where: {
-          id: params.id || undefined,
-          organizationId: params.organizationId || undefined,
-          role: params.role || undefined,
-          name: params.name
-            ? {
-                contains: params.name,
-                mode: 'insensitive',
-              }
-            : undefined,
-          email: params.email
-            ? {
-                contains: params.email,
-                mode: 'insensitive',
-              }
-            : undefined,
-        },
+        where,
       }),
       this.prisma.user.findMany({
-        where: {
-          id: params.id || undefined,
-          organizationId: params.organizationId || undefined,
-          role: params.role || undefined,
-          name: params.name
-            ? {
-                contains: params.name,
-                mode: 'insensitive',
-              }
-            : undefined,
-          email: params.email
-            ? {
-                contains: params.email,
-                mode: 'insensitive',
-              }
-            : undefined,
-        },
+        where: where,
         include: {
           organization: true,
         },

@@ -7,15 +7,21 @@ import {
   Delete,
   Put,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { OrganizationService } from './organization.service';
-import { OrganizationCreateDto, OrganizationUpdateDto } from './dto';
+import {
+  OrganizationCreateDto,
+  OrganizationUpdateDto,
+  OrganizationFindDto,
+} from './dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrganizationEntity } from './organization.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { FindAllResponse } from 'src/shared/types/find-all.types';
 
 @ApiTags('organization')
 @Controller('organization')
@@ -32,8 +38,10 @@ export class OrganizationController {
     type: OrganizationEntity,
     isArray: true,
   })
-  async listAll(): Promise<OrganizationEntity[]> {
-    return this.organizationService.list();
+  async listAll(
+    @Query() params: OrganizationFindDto,
+  ): Promise<FindAllResponse<OrganizationEntity>> {
+    return this.organizationService.list(params);
   }
 
   @Post('/')

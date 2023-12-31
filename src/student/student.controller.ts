@@ -8,6 +8,7 @@ import {
   Put,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { StudentCreateDto, StudentUpdateDto } from './dto';
@@ -17,6 +18,8 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { FindAllResponse } from 'src/shared/types/find-all.types';
+import { UserFindDto } from 'src/user/dto';
 
 @ApiTags('student')
 @Controller('student')
@@ -32,8 +35,14 @@ export class StudentController {
     type: [StudentEntity],
     isArray: true,
   })
-  async listAll(@Request() req): Promise<StudentEntity[]> {
-    return this.studentService.list(req.user.organizationId);
+  async listAll(
+    @Query() data: UserFindDto,
+    @Request() req,
+  ): Promise<FindAllResponse<StudentEntity>> {
+    return this.studentService.list({
+      ...data,
+      organizationId: req.user.organizationId,
+    });
   }
 
   @Roles(UserRole.ORG_ADMIN, UserRole.ORG_MEMBER)
