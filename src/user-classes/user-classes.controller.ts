@@ -1,12 +1,13 @@
 import { Controller, Post, Get, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserClassesService } from './user-classes.service';
-import { UserClassesCreateDto } from './dto';
+import { UserClassesCreateDto, UserClassesFindDto } from './dto';
 import { UserClassesEntity } from './user-classes.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { FindAllResponse } from 'src/shared/types/find-all.types';
 
 @ApiTags('user-classes')
 @Controller('user-classes')
@@ -22,8 +23,10 @@ export class UserClassesController {
     type: [UserClassesEntity],
     isArray: true,
   })
-  async listAll(@Query() { classId }): Promise<UserClassesEntity[]> {
-    return this.userClassesService.list(classId);
+  async listAll(
+    @Query() params: UserClassesFindDto,
+  ): Promise<FindAllResponse<UserClassesEntity>> {
+    return this.userClassesService.list(params);
   }
 
   @Roles(UserRole.ORG_ADMIN, UserRole.ORG_MEMBER)
@@ -37,7 +40,7 @@ export class UserClassesController {
   async create(
     @Body()
     data: UserClassesCreateDto,
-  ): Promise<UserClassesEntity[]> {
+  ): Promise<FindAllResponse<UserClassesEntity>> {
     return this.userClassesService.create(data);
   }
 }
