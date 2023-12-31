@@ -1,8 +1,9 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { UserCreateDto } from './dto';
+import { UserCreateDto, UserFindDto } from './dto';
 import { UserEntity } from './user.entity';
+import { FindAllResponse } from 'src/shared/types/find-all.types';
 
 @ApiTags('user')
 @Controller('user')
@@ -17,8 +18,10 @@ export class UserController {
     type: UserEntity,
     isArray: true,
   })
-  async listAll(): Promise<UserEntity[]> {
-    return this.userService.list();
+  async listAll(
+    @Query() query: UserFindDto,
+  ): Promise<FindAllResponse<UserEntity>> {
+    return this.userService.list(query);
   }
 
   @Post('/')

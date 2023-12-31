@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { UserCreateDto } from './dto';
+import { UserCreateDto, UserFindDto } from './dto';
 import { UserEntity } from './user.entity';
 import * as bcrypt from 'bcrypt';
+import { FindAllResponse } from 'src/shared/types/find-all.types';
 
 @Injectable()
 export class UserService {
@@ -20,12 +21,54 @@ export class UserService {
     });
   }
 
-  async list(): Promise<UserEntity[]> {
-    return this.prisma.user.findMany({
-      include: {
-        organization: true,
-      },
-    });
+  async list(params: UserFindDto): Promise<FindAllResponse<UserEntity>> {
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.user.count({
+        where: {
+          id: params.id || undefined,
+          organizationId: params.organizationId || undefined,
+          role: params.role || undefined,
+          name: params.name
+            ? {
+                contains: params.name,
+                mode: 'insensitive',
+              }
+            : undefined,
+          email: params.email
+            ? {
+                contains: params.email,
+                mode: 'insensitive',
+              }
+            : undefined,
+        },
+      }),
+      this.prisma.user.findMany({
+        where: {
+          id: params.id || undefined,
+          organizationId: params.organizationId || undefined,
+          role: params.role || undefined,
+          name: params.name
+            ? {
+                contains: params.name,
+                mode: 'insensitive',
+              }
+            : undefined,
+          email: params.email
+            ? {
+                contains: params.email,
+                mode: 'insensitive',
+              }
+            : undefined,
+        },
+        include: {
+          organization: true,
+        },
+        take: Number(params.take) || 20,
+        skip: Number(params.skip) || 0,
+      }),
+    ]);
+
+    return { total, data };
   }
 
   async create(data: UserCreateDto): Promise<UserEntity> {
