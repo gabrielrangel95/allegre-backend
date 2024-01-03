@@ -7,8 +7,10 @@ import {
   SignInResponseDto,
   JwtPayloadDto,
   ForgotPasswordDto,
+  ResetPasswordDto,
 } from './dto';
 import { JwtService } from '@nestjs/jwt';
+import { differenceInHours } from 'date-fns';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,43 @@ export class AuthService {
     private jwtService: JwtService,
     private mailService: MailService,
   ) {}
+
+  async resetPassword(data: ResetPasswordDto) {
+    const user = await this.userService.findByEmail(
+      data.email,
+      data.organizationId,
+    );
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    if (!user.forgotPasswordSentAt) {
+      throw new UnauthorizedException();
+    }
+
+    // compare date
+    const nowDate = new Date();
+    const sentDate = user.forgotPasswordSentAt;
+    const diffHours = differenceInHours(sentDate, nowDate);
+
+    if (diffHours > 24) {
+      throw new UnauthorizedException('Token expired!');
+    }
+
+    const isMatch = await bcrypt.compare(data.token, user.forgotPasswordToken);
+
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid Token!');
+    }
+
+    await this.userService.update(user.id, {
+      ...user,
+      password: await bcrypt.hash(data.newPassword, 10),
+    });
+
+    return { success: true };
+  }
 
   async forgotPassword(data: ForgotPasswordDto) {
     const user = await this.userService.findByEmail(

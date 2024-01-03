@@ -5,6 +5,7 @@ export class UserUpdateDto extends PickType(UserEntity, [
   'name',
   'email',
   'avatarUrl',
+  'password',
   'forgotPasswordSentAt',
   'forgotPasswordToken',
 ]) {}
