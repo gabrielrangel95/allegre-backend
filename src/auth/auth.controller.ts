@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { SignInDto, SignInResponseDto } from './dto';
+import { ForgotPasswordDto, SignInDto, SignInResponseDto } from './dto';
 import { AuthService } from './auth.service';
 
 @ApiTags('auth')
@@ -20,5 +20,18 @@ export class AuthController {
     data: SignInDto,
   ): Promise<SignInResponseDto> {
     return this.authService.signIn(data);
+  }
+
+  @Post('/forgot-password')
+  @ApiOperation({ summary: 'Forgot Password' })
+  @ApiResponse({
+    status: 200,
+    description: 'Forgot password worked',
+  })
+  async forgotPassword(
+    @Body()
+    data: ForgotPasswordDto,
+  ) {
+    return this.authService.forgotPassword(data);
   }
 }
